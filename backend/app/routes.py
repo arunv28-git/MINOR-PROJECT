@@ -100,6 +100,7 @@ def generate_plan():
 
     normalized_request = {
         'destination': destination,
+        'currentLocation': request_data.get('currentLocation'),
         'days': int(days),
         'numberOfDays': int(days),
         'budget': float(budget),
@@ -136,6 +137,7 @@ def generate_plan_public():
 
     normalized_request = {
         'destination': destination,
+        'currentLocation': request_data.get('currentLocation'),
         'days': int(days),
         'numberOfDays': int(days),
         'budget': float(budget),
@@ -172,6 +174,7 @@ def plan_trip_legacy():
 
     normalized_request = {
         'destination': destination,
+        'currentLocation': request_data.get('currentLocation'),
         'days': int(days),
         'budget': float(budget),
         'people': int(people),

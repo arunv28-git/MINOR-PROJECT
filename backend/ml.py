@@ -52,9 +52,26 @@ def select_daily_attractions(
 ) -> Tuple[List[List[Dict]], float]:
     """0/1 knapsack by fee (cost) with a time guard; falls back to greedy if needed."""
     
-    # We use len(clusters) in case k was less than num_days
-    num_clusters = max(1, len(clusters))
-    per_day_budget = activities_budget_total / num_clusters
+    # Flatten all clusters to get all attractions
+    all_attractions = []
+    for cluster in clusters:
+        all_attractions.extend(cluster)
+    
+    # If we have fewer clusters than days, redistribute all attractions evenly across all days
+    # This ensures every day gets some activities
+    if len(clusters) < num_days:
+        # Redistribute evenly across num_days using round-robin
+        clusters = [[] for _ in range(num_days)]
+        for i, attraction in enumerate(all_attractions):
+            clusters[i % num_days].append(attraction)
+    else:
+        # Ensure we have exactly num_days clusters (pad with empty lists if needed)
+        while len(clusters) < num_days:
+            clusters.append([])
+        # Trim to exactly num_days if we somehow have more
+        clusters = clusters[:num_days]
+    
+    per_day_budget = activities_budget_total / num_days
 
     all_days: List[List[Dict]] = []
     total_fees = 0.0

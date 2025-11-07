@@ -13,6 +13,7 @@ GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY") or GOOGLE_MAPS_API_KE
 GOOGLE_PLACES_BASE = "https://maps.googleapis.com/maps/api/place"
 GOOGLE_GEOCODING_BASE = "https://maps.googleapis.com/maps/api/geocode"
 GOOGLE_PLACES_NEW_BASE = "https://places.googleapis.com/v1"
+GOOGLE_DISTANCE_MATRIX_BASE = "https://maps.googleapis.com/maps/api/distancematrix"
 
 # --- Helper Functions ---
 
@@ -355,3 +356,79 @@ def find_restaurants_in_budget_api(lat: float, lng: float, radius_m: int = 3000,
 
     print(f"Found {len(filtered_restaurants)} suitable restaurants after filtering.")
     return {"status": "ok", "items": filtered_restaurants[:max_results]} # Return top N results
+
+# --- Distance Matrix API ---
+def google_distance_matrix(origin: str, destination: str, mode: str = "driving"):
+    """
+    Calculate distance and travel time between two locations using Google Distance Matrix API.
+    Returns distance in km, duration in hours, and estimated travel cost.
+    """
+    if not GOOGLE_MAPS_API_KEY:
+        return {"status": "disabled", "reason": "missing_api_key"}
+    
+    url = f"{GOOGLE_DISTANCE_MATRIX_BASE}/json"
+    params = {
+        "origins": origin,
+        "destinations": destination,
+        "mode": mode,  # driving, walking, transit, bicycling
+        "key": GOOGLE_MAPS_API_KEY,
+        "units": "metric"  # Returns distance in kilometers
+    }
+    
+    result = _make_request(url, params=params, method="GET", timeout=15)
+    
+    if result["status"] != "ok":
+        return result
+    
+    data = result["data"]
+    
+    # Check API response status
+    if data.get("status") != "OK":
+        return {"status": "error", "reason": data.get("status"), "error_message": data.get("error_message", "Distance Matrix API error")}
+    
+    rows = data.get("rows", [])
+    if not rows or not rows[0].get("elements"):
+        return {"status": "error", "reason": "no_results", "error_message": "No distance data found"}
+    
+    element = rows[0]["elements"][0]
+    
+    if element.get("status") != "OK":
+        return {"status": "error", "reason": element.get("status"), "error_message": f"Could not calculate distance: {element.get('status')}"}
+    
+    # Extract distance and duration
+    distance_text = element.get("distance", {}).get("text", "0 km")
+    distance_value = element.get("distance", {}).get("value", 0) / 1000.0  # Convert meters to km
+    duration_text = element.get("duration", {}).get("text", "0 hours")
+    duration_value = element.get("duration", {}).get("value", 0) / 3600.0  # Convert seconds to hours
+    
+    # Estimate travel cost based on mode and distance
+    # These are rough estimates for India
+    cost_per_km = {
+        "driving": 8.0,  # ₹8 per km for car (fuel + maintenance)
+        "transit": 1.5,  # ₹1.5 per km for public transport
+        "walking": 0.0,  # Free
+        "bicycling": 0.0  # Free
+    }
+    
+    base_cost = distance_value * cost_per_km.get(mode, 8.0)
+    
+    # Add base fare for transit
+    if mode == "transit" and distance_value > 0:
+        base_cost += 20  # Base fare
+    
+    # For driving, add toll charges estimate (rough: ₹50 per 100km)
+    if mode == "driving" and distance_value > 0:
+        toll_estimate = (distance_value / 100) * 50
+        base_cost += toll_estimate
+    
+    return {
+        "status": "ok",
+        "distance_km": round(distance_value, 2),
+        "distance_text": distance_text,
+        "duration_hours": round(duration_value, 2),
+        "duration_text": duration_text,
+        "mode": mode,
+        "estimated_cost_inr": round(base_cost, 2),
+        "origin": origin,
+        "destination": destination
+    }

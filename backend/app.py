@@ -18,6 +18,7 @@ from apis import (
     find_attractions_api,
     find_restaurants_in_budget_api,
     google_hotels_search,
+    google_distance_matrix,
 )
 import os
 import sqlite3
@@ -97,6 +98,7 @@ def plan_trip():
 
     # --- Extract Input Parameters ---
     destination = trip_details.get('destination')
+    current_location = trip_details.get('currentLocation')  # New field
     days = int(trip_details.get('days', 3))
     budget = float(trip_details.get('budget', 0))
     people = int(trip_details.get('people', 1))
@@ -124,9 +126,32 @@ def plan_trip():
         "transport_advice": None,
         "activities_fee_estimated": 0, # Initialize
         "itinerary_id": None,
-        "share_url": None
+        "share_url": None,
+        "travel_info": None  # New field for travel distance and cost
     }
 
+    # --- Calculate Travel Distance and Cost (if current location provided) ---
+    if current_location and current_location.strip():
+        print(f"Calculating travel distance from {current_location} to {destination}")
+        # Try driving mode first
+        travel_result = google_distance_matrix(current_location, destination, mode="driving")
+        if travel_result.get("status") == "ok":
+            # Multiply cost by number of people for round trip
+            travel_cost = travel_result.get("estimated_cost_inr", 0) * people * 2  # Round trip
+            itinerary["travel_info"] = {
+                "origin": current_location,
+                "destination": destination,
+                "distance_km": travel_result.get("distance_km", 0),
+                "distance_text": travel_result.get("distance_text", "N/A"),
+                "duration_text": travel_result.get("duration_text", "N/A"),
+                "estimated_cost_inr": round(travel_cost, 2),
+                "estimated_cost_per_person": round(travel_result.get("estimated_cost_inr", 0) * 2, 2),  # Round trip per person
+                "mode": "driving"
+            }
+            print(f"Travel distance: {travel_result.get('distance_text')}, Estimated cost: ₹{travel_cost:.2f} (round trip for {people} people)")
+        else:
+            print(f"[Warning] Could not calculate travel distance: {travel_result.get('reason', 'unknown')}")
+    
     # --- Minimum Budget Check ---
     itinerary["minimum_budget"] = estimate_minimum_budget(days, people)
     try:

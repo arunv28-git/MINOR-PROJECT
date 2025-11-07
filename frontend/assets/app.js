@@ -4,11 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const params = new URLSearchParams(window.location.search);
         const dest = params.get('dest');
+        const currentLoc = params.get('currentLocation');
         const days = params.get('days');
         const budget = params.get('budget');
         const people = params.get('people');
         if (dest) {
             const d = document.getElementById('destination'); if (d) d.value = decodeURIComponent(dest);
+        }
+        if (currentLoc) {
+            const cl = document.getElementById('currentLocation'); if (cl) cl.value = decodeURIComponent(currentLoc);
         }
         if (days) { const el = document.getElementById('days'); if (el) el.value = Number(days) || ''; }
         if (budget) { const el = document.getElementById('budget'); if (el) el.value = Number(budget) || ''; }
@@ -55,6 +59,7 @@ tripForm.addEventListener('submit', async function(event) {
 
     const tripDetails = {
         destination: formData.get('destination'),
+        currentLocation: formData.get('currentLocation') || null,
         days: parseInt(formData.get('days'), 10),
         budget: parseFloat(formData.get('budget')),
         people: peopleCount,
