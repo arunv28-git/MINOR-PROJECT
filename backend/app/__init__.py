@@ -82,9 +82,15 @@ def create_app():
     @app.route('/', methods=['GET'])
     def root():
         endpoints = ["/health", "/plan-trip", "/itinerary/<id>", "/api/itinerary/generate-public"]
-        if mongo_uri and mongo_uri != "mongodb://localhost:27017/tripster":
-            endpoints.extend(["/api/auth/signup", "/api/auth/signin", "/api/itinerary/generate"])
-        return jsonify({"message": "Tripster API running", "endpoints": endpoints})
+        # Authentication endpoints are always available (using SQLite or MongoDB)
+        endpoints.extend(["/api/auth/signup", "/api/auth/signin", "/api/itinerary/generate"])
+        db_type = "MongoDB" if (mongo_uri and mongo_uri != "mongodb://localhost:27017/tripster") else "SQLite"
+        return jsonify({
+            "message": "Tripster API running",
+            "endpoints": endpoints,
+            "database": db_type,
+            "authentication": "enabled"
+        })
 
     @app.route('/health', methods=['GET'])
     def health():
@@ -92,15 +98,26 @@ def create_app():
 
     # --- Application Context ---
     with app.app_context():
+        # Initialize SQLite database for users (always, as fallback or primary)
+        try:
+            from .db import init_user_db
+            init_user_db()
+            print("[Info] SQLite user database initialized.")
+        except Exception as e:
+            print(f"[Warning] SQLite user database initialization failed: {e}")
+        
+        # Try MongoDB if configured
         if mongo_uri and mongo_uri != "mongodb://localhost:27017/tripster":
             try:
                 from .models import create_user_indexes
                 create_user_indexes()
-                print("Flask App created, MongoDB connected, and DB indexes checked/created.")
+                print("[Info] Flask App created, MongoDB connected, and DB indexes checked/created.")
+                print("[Info] Authentication available via MongoDB (primary) and SQLite (fallback).")
             except Exception as e:
-                print(f"[Warning] MongoDB initialization failed: {e}. Auth features disabled.")
+                print(f"[Warning] MongoDB initialization failed: {e}. Using SQLite for authentication.")
+                print("[Info] Authentication available via SQLite.")
         else:
-            print("Flask App created (SQLite-only mode, auth disabled).")
+            print("[Info] Flask App created. Authentication available via SQLite.")
 
     # Return the configured Flask app instance
     return app

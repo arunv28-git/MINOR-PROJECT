@@ -25,7 +25,11 @@
                 <a href="places.html" class="hover:text-purple-300">Places</a>
                 <a href="services.html" class="hover:text-purple-300">Services</a>
             </nav>
-            <button class="hidden md:block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Contact Us</button>
+            <div class="flex items-center space-x-4">
+                <span id="userGreeting" class="hidden md:block text-white text-sm"></span>
+                <a id="loginButtonNav" href="login.html" class="hidden md:block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Login</a>
+                <button id="logoutButtonNav" class="hidden md:block bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Logout</button>
+            </div>
         </div>
     </header>
 
@@ -243,6 +247,37 @@
         </div>
     </footer>
 
+    <script src="assets/auth.js"></script>
     <script src="assets/app.js"></script>
+    <script>
+        // Update navigation based on auth status
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('tripster_token');
+            const username = localStorage.getItem('tripster_username');
+            const loginButtonNav = document.getElementById('loginButtonNav');
+            const logoutButtonNav = document.getElementById('logoutButtonNav');
+            const userGreeting = document.getElementById('userGreeting');
+
+            if (token && window.authUtils) {
+                // User is logged in
+                if (loginButtonNav) loginButtonNav.classList.add('hidden');
+                if (logoutButtonNav) {
+                    logoutButtonNav.classList.remove('hidden');
+                    logoutButtonNav.addEventListener('click', () => {
+                        window.authUtils.logout();
+                    });
+                }
+                if (userGreeting && username) {
+                    userGreeting.textContent = `Hello, ${username}!`;
+                    userGreeting.classList.remove('hidden');
+                }
+            } else {
+                // User is not logged in
+                if (loginButtonNav) loginButtonNav.classList.remove('hidden');
+                if (logoutButtonNav) logoutButtonNav.classList.add('hidden');
+                if (userGreeting) userGreeting.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

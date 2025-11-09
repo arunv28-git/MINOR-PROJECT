@@ -22,14 +22,25 @@ SAMPLE_ATTRACTIONS: List[Dict] = [
 
 
 def cluster_attractions_by_location(num_days: int, attractions: List[Dict] | None = None) -> List[List[Dict]]:
-    data = attractions or SAMPLE_ATTRACTIONS
+    # Handle empty or None attractions
+    if attractions is None or (isinstance(attractions, list) and len(attractions) == 0):
+        # Return empty clusters - caller should handle this
+        return [[] for _ in range(num_days)]
+    
+    data = attractions
     
     # Ensure k is valid
     k = min(num_days, len(data))
     
     if k <= 1 or not SKLEARN_AVAILABLE:
-        # simple chunking fallback
-        return [data]
+        # simple chunking fallback - distribute evenly across days
+        if not data:
+            return [[] for _ in range(num_days)]
+        # If only 1 day or 1 attraction, put all in first day
+        if k == 1:
+            result = [data] + [[] for _ in range(num_days - 1)]
+            return result[:num_days]
+        return [data] if data else [[] for _ in range(num_days)]
 
     X = [[a["lat"], a["lng"]] for a in data]
     kmeans = KMeans(n_clusters=k, n_init=10, random_state=42)

@@ -108,33 +108,70 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
     # Determine Destination Center (Catalog first, then Google Geocoding)
     geo_lat, geo_lng = None, None
     cat = get_catalog_for_destination(destination)
-    if cat and get_catalog_center(destination):
-        c = get_catalog_center(destination)
-        try:
-            geo_lat, geo_lng = float(c.get('lat')), float(c.get('lng'))
-            print(f"Catalog center for {destination}: ({geo_lat},{geo_lng})")
-        except Exception:
-            geo_lat, geo_lng = None, None
+    print(f"[Debug] Looking up destination: '{destination}'")
+    print(f"[Debug] Catalog lookup result: {cat is not None}")
+    
+    if cat:
+        print(f"[Debug] Found catalog entry for {destination}")
+        if get_catalog_center(destination):
+            c = get_catalog_center(destination)
+            try:
+                geo_lat, geo_lng = float(c.get('lat')), float(c.get('lng'))
+                print(f"Catalog center for {destination}: ({geo_lat},{geo_lng})")
+            except Exception as e:
+                print(f"[Warning] Error parsing catalog center: {e}")
+                geo_lat, geo_lng = None, None
+        else:
+            print(f"[Warning] Catalog found but no center coordinates")
+    else:
+        print(f"[Debug] No catalog entry found for '{destination}'")
+    
     if geo_lat is None or geo_lng is None:
+        print(f"[Info] Attempting geocoding for {destination}...")
         geo = google_geocode_place(destination)
         if geo and geo.get("status") == "ok":
             geo_lat, geo_lng = float(geo["lat"]), float(geo["lng"])
             print(f"Geocoded {destination} to ({geo_lat}, {geo_lng})")
         else:
             print(f"[Warning] Geocoding failed for {destination}: {geo.get('reason') if isinstance(geo, dict) else 'unknown'}")
+            # Use default coordinates if geocoding fails
+            geo_lat, geo_lng = 28.6139, 77.2090  # Default to Delhi coordinates
+            print(f"[Info] Using default coordinates: ({geo_lat}, {geo_lng})")
 
-    # Fetch Attractions (Catalog first, then API)
+    # Fetch Attractions (API first, then Catalog as fallback)
     attractions_for_city_raw = []
-    if cat:
-        cat_items = get_catalog_attractions(destination, geo_lat, geo_lng)
-        if cat_items:
-            attractions_for_city_raw = cat_items
-    if not attractions_for_city_raw and geo_lat and geo_lng:
+    
+    # Try API first if we have coordinates
+    if geo_lat and geo_lng:
+        print(f"[Info] Attempting Google Places API search for attractions near ({geo_lat}, {geo_lng})")
         attractions_result = find_attractions_api(destination, geo_lat, geo_lng)
         if attractions_result.get("status") == "ok":
             attractions_for_city_raw = attractions_result.get("items", [])
+            print(f"[Info] ✅ Found {len(attractions_for_city_raw)} attractions from Google Places API: {[item.get('name') for item in attractions_for_city_raw[:3]]}")
+        else:
+            reason = attractions_result.get('reason', 'unknown')
+            error_msg = attractions_result.get('error_message', '')
+            print(f"[Warning] Google Places API search failed: {reason}")
+            if error_msg:
+                print(f"[Warning] API Error details: {error_msg}")
+            # Fall back to catalog if API fails
+            if cat:
+                print(f"[Info] Falling back to catalog data for {destination}")
+                cat_items = get_catalog_attractions(destination, geo_lat, geo_lng)
+                if cat_items:
+                    print(f"[Info] Found {len(cat_items)} attractions from catalog: {[item.get('name') for item in cat_items[:3]]}")
+                    attractions_for_city_raw = cat_items
+    else:
+        # No coordinates, try catalog
+        if cat:
+            print(f"[Info] No coordinates available, using catalog data for {destination}")
+            cat_items = get_catalog_attractions(destination, geo_lat, geo_lng)
+            if cat_items:
+                print(f"[Info] Found {len(cat_items)} attractions from catalog: {[item.get('name') for item in cat_items[:3]]}")
+                attractions_for_city_raw = cat_items
+    
     if not attractions_for_city_raw:
-        print("[Warning] No attractions found from catalog or API.")
+        print("[Warning] No attractions found from API or catalog. Itinerary will have generic activities.")
 
     # Map Attractions for ML
     attractions_for_ml = []
@@ -142,9 +179,15 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
          mapped = []
          for place in attractions_for_city_raw:
              name = place.get("name", "Point of Interest")
+             if not name or name == "Point of Interest":
+                 print(f"[Warning] Place missing name: {place}")
+                 continue
+                 
              location = place.get("geometry", {}).get("location", {})
              lat_i, lng_i = location.get("lat"), location.get("lng")
-             if lat_i is None or lng_i is None: continue
+             if lat_i is None or lng_i is None:
+                 print(f"[Warning] Place '{name}' missing coordinates, skipping")
+                 continue
 
              est_fee = 0  # Default free
 
@@ -156,7 +199,7 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
              elif "shopping_mall" in types: duration = 1.5
 
              mapped.append({
-                 "name": name,
+                 "name": name,  # Ensure name is preserved
                  "lat": float(lat_i), "lng": float(lng_i),
                  "est_fee": float(est_fee),
                  "duration_hours": float(duration),
@@ -164,17 +207,59 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
                  "rating": place.get("rating")
              })
          attractions_for_ml = mapped
+         print(f"[Info] Mapped {len(attractions_for_ml)} attractions for ML processing: {[a['name'] for a in attractions_for_ml[:3]]}")
     else:
-         print("[Warning] No attractions found or geocoding failed; ML will use defaults if any.")
+         print("[Warning] No attractions found or geocoding failed; itinerary will have generic activities.")
 
     # ML: Cluster and Select Daily Attractions
-    clusters = cluster_attractions_by_location(days, attractions=attractions_for_ml)
-    activities_days, activities_fees_total = select_daily_attractions(
-        clusters=clusters,
-        activities_budget_total=itinerary["budget_summary"]["activities"],
-        num_days=days,
-    )
+    if not attractions_for_ml:
+        print(f"[Warning] No attractions available for {destination}. Creating fallback activities.")
+        # Create fallback activities based on destination
+        activities_days = []
+        for day in range(days):
+            activities_days.append([{
+                "name": f"Explore {destination}",
+                "lat": geo_lat or 0.0,
+                "lng": geo_lng or 0.0,
+                "est_fee": 0,
+                "duration_hours": 3.0,
+                "category": "sightseeing",
+                "rating": None
+            }])
+        activities_fees_total = 0
+    else:
+        clusters = cluster_attractions_by_location(days, attractions=attractions_for_ml)
+        print(f"[Info] Created {len(clusters)} clusters from {len(attractions_for_ml)} attractions")
+        activities_days, activities_fees_total = select_daily_attractions(
+            clusters=clusters,
+            activities_budget_total=itinerary["budget_summary"]["activities"],
+            num_days=days,
+        )
+    
     itinerary["activities_fee_estimated"] = round(activities_fees_total)
+    
+    # Debug: Print selected activities
+    total_selected = sum(len(day) for day in activities_days)
+    if total_selected > 0:
+        print(f"[Info] Selected {total_selected} activities across {days} days")
+        for i, day_activities in enumerate(activities_days, 1):
+            if day_activities:
+                names = [a.get("name", "Unknown") for a in day_activities]
+                print(f"  Day {i}: {names}")
+    else:
+        print("[Warning] No activities selected - creating fallback")
+        # Last resort fallback
+        activities_days = []
+        for day in range(days):
+            activities_days.append([{
+                "name": f"Explore {destination}",
+                "lat": geo_lat or 0.0,
+                "lng": geo_lng or 0.0,
+                "est_fee": 0,
+                "duration_hours": 3.0,
+                "category": "sightseeing",
+                "rating": None
+            }])
 
     # Hotel Search & Selection
     selected_hotel_details = None
@@ -182,13 +267,25 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
     budget_per_night = accommodation_budget_total / max(1, days)
 
     try:
-        best_hotel_match = select_catalog_hotel(destination, budget_per_night)
+        # Try API first
         hotels_result = {"status": "skip"}
-        if best_hotel_match is None:
-            if geo_lat and geo_lng:
-                hotels_result = google_hotels_search(destination, lat=geo_lat, lng=geo_lng)
-            else:
-                hotels_result = google_hotels_search(destination)
+        best_hotel_match = None
+        if geo_lat and geo_lng:
+            print(f"[Info] Searching hotels via Google Places API for {destination}")
+            hotels_result = google_hotels_search(destination, lat=geo_lat, lng=geo_lng)
+        else:
+            print(f"[Info] Searching hotels via Google Places API for {destination}")
+            hotels_result = google_hotels_search(destination)
+        
+        # If API fails, try catalog
+        if hotels_result.get("status") != "ok":
+            reason = hotels_result.get('reason', 'unknown')
+            error_msg = hotels_result.get('error_message', '')
+            print(f"[Warning] Hotel API search failed: {reason}")
+            if error_msg:
+                print(f"[Warning] API Error details: {error_msg}")
+            print(f"[Info] Falling back to catalog for hotels")
+            best_hotel_match = select_catalog_hotel(destination, budget_per_night)
 
         if best_hotel_match is None and hotels_result.get("status") == "ok" and hotels_result.get("items"):
             best_hotel_match = None
@@ -286,21 +383,29 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
 
          print(f"Target meal cost: {avg_meal_cost_target:.0f} -> Max Price Level: {max_price_level}")
 
-         # Catalog restaurants first, then API
-         fetched_restaurants = get_catalog_restaurants(destination, veg_only=veg_only) or []
-         if not fetched_restaurants:
-             restaurants_result = find_restaurants_in_budget_api(
-                 lat=search_lat, lng=search_lng,
-                 radius_m=3000,
-                 min_rating=4.0,
-                 max_price_level=max_price_level,
-                 veg_only=veg_only
-             )
-             if restaurants_result.get("status") == "ok":
-                 fetched_restaurants = restaurants_result.get("items", [])
-                 print(f"Found {len(fetched_restaurants)} suitable restaurants via API.")
-             else:
-                 print(f"[Warning] Restaurant API search failed: {restaurants_result.get('reason')}")
+         # Try API first, then catalog as fallback
+         fetched_restaurants = []
+         restaurants_result = find_restaurants_in_budget_api(
+             lat=search_lat, lng=search_lng,
+             radius_m=3000,
+             min_rating=4.0,
+             max_price_level=max_price_level,
+             veg_only=veg_only
+         )
+         if restaurants_result.get("status") == "ok":
+             fetched_restaurants = restaurants_result.get("items", [])
+             print(f"[Info] ✅ Found {len(fetched_restaurants)} restaurants via Google Places API.")
+         else:
+             reason = restaurants_result.get('reason', 'unknown')
+             error_msg = restaurants_result.get('error_message', '')
+             print(f"[Warning] Restaurant API search failed: {reason}")
+             if error_msg:
+                 print(f"[Warning] API Error details: {error_msg}")
+             # Fall back to catalog
+             catalog_restaurants = get_catalog_restaurants(destination, veg_only=veg_only) or []
+             if catalog_restaurants:
+                 print(f"[Info] Using {len(catalog_restaurants)} restaurants from catalog")
+                 fetched_restaurants = catalog_restaurants
     else:
         print("[Warning] Skipping restaurant search due to missing coordinates.")
 
@@ -316,6 +421,12 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
 
         time_slot = 9  # Start activities at 9 AM
         for attraction in selected_attractions_today:
+             # Ensure we have a valid name
+             attraction_name = attraction.get("name") or attraction.get("description", "Explore local area")
+             if not attraction_name or attraction_name == "Point of Interest":
+                 print(f"[Warning] Skipping attraction with invalid name: {attraction}")
+                 continue
+                 
              hour = time_slot % 24
              am_pm = "AM" if hour < 12 else "PM"
              display_hour = hour if hour <= 12 else hour - 12
@@ -323,7 +434,7 @@ def generate_itinerary_service(request_data: dict, username: str = "guest"):
 
              day_activities.append({
                  "time": f"{display_hour}:00 {am_pm}",
-                 "description": attraction["name"],
+                 "description": attraction_name,  # Use the validated name
                  "type": "activity",
                  "est_fee": attraction.get("est_fee", 0),
                  "rating": attraction.get("rating")

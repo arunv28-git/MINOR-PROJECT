@@ -2,6 +2,31 @@ Smart Trip Planner (Tripster)
 
 A minimal end-to-end starter for a smart trip planner with a Flask backend and a vanilla HTML/Tailwind frontend.
 
+## 📖 Quick Setup Guide
+
+**For detailed step-by-step instructions with troubleshooting, see [SETUP.md](SETUP.md)**
+
+### Quick Start (5 minutes):
+
+1. **Backend Setup:**
+   ```powershell
+   cd backend
+   pip install -r requirements.txt
+   # Create .env file with SECRET_KEY and JWT_SECRET_KEY
+   python run.py
+   ```
+
+2. **Frontend:**
+   - Open `frontend/index.html` in your browser
+   - OR run: `cd frontend && python -m http.server 8000`
+
+3. **Test Login:**
+   - Click "Login" button → Register a new user → Login
+
+**That's it!** The login page works with SQLite (no MongoDB needed).
+
+---
+
 Prerequisites
 - Windows 10/11 (PowerShell)
 - Python 3.11 or 3.12 (use the embedded venv inside `backend/venv` or your own)
@@ -9,38 +34,123 @@ Prerequisites
 
 1) Backend Setup
 
-Open PowerShell and run:
+**Prerequisites:**
+- Python 3.11 or 3.12
+- MongoDB (optional - SQLite is used by default)
+
+**Quick Start (Recommended - SQLite, No Setup Required):**
+
+1. Open PowerShell and navigate to the backend directory:
 
 ```powershell
-cd "C:\Users\Dhrupad\Desktop\Trip planner\backend"
-# If you want to use the repo's venv (already present), activate it:
-. .\venv\Scripts\Activate.ps1
-# If you prefer your own venv, create it instead:
-# python -m venv .venv; . .\.venv\Scripts\Activate.ps1
+cd backend
+# Activate virtual environment (if using one)
+# . .\venv\Scripts\Activate.ps1
+# OR create a new venv:
+# python -m venv venv
+# . .\venv\Scripts\Activate.ps1
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Set your Google Places API key (optional for now)
-$env:GOOGLE_PLACES_API_KEY = "your-key-here"
-
-# Run the server
-python app.py
 ```
 
-This starts the API at `http://127.0.0.1:5000`.
+2. Create a `.env` file in the `backend` directory (optional, but recommended):
 
-2) Frontend
+```env
+SECRET_KEY=your-secret-key-here-change-in-production
+JWT_SECRET_KEY=your-jwt-secret-key-here-change-in-production
+GOOGLE_PLACES_API_KEY=your-google-places-api-key-here
+```
+
+3. Run the server:
+
+```powershell
+python run.py
+```
+
+**That's it!** The application will use SQLite for authentication by default. No MongoDB installation needed!
+
+**Option: Using MongoDB (Optional)**
+
+If you prefer MongoDB over SQLite:
+
+1. Install and start MongoDB:
+   - Download MongoDB Community Server from https://www.mongodb.com/try/download/community
+   - Install and start MongoDB service (or run `mongod` manually)
+
+2. Add to your `.env` file:
+
+```env
+MONGO_URI=mongodb://localhost:27017/tripster
+```
+
+3. The app will automatically use MongoDB if `MONGO_URI` is set, otherwise it uses SQLite.
+
+**Note:** Both SQLite and MongoDB support full authentication features. SQLite is simpler to set up (no installation needed) and works great for development and small deployments.
+
+The API will start at `http://127.0.0.1:5000`.
+
+2) Frontend Setup
+
+**Option A: Simple File Opening (Recommended for Development)**
 
 Simply open `frontend/index.html` in your browser (double-click or drag into a tab).
 
-The form will POST to `http://127.0.0.1:5000/plan-trip` and render the mock itinerary.
+**Option B: Using a Local Server (Recommended for Production-like Testing)**
 
-3) Project Structure
+If you encounter CORS issues or want a more production-like environment:
 
-- `backend/app.py`: Flask app with a `/plan-trip` endpoint returning a mock itinerary
+```powershell
+# Using Python's built-in server
+cd frontend
+python -m http.server 8000
+# Then open http://localhost:8000 in your browser
+
+# OR using Node.js http-server (if installed)
+# npx http-server -p 8000
+```
+
+3) Using the Application
+
+**Registration and Login:**
+1. Navigate to the login page (click "Login" button in the header)
+2. Click the "Register" tab to create a new account
+3. Fill in username, email, and password (minimum 6 characters)
+4. After registration, switch to the "Login" tab and sign in
+5. Once logged in, you'll see your username in the header
+
+**Planning a Trip:**
+1. On the home page, fill in the trip details:
+   - Current location (optional)
+   - Destination
+   - Number of days
+   - Budget (in INR)
+   - Number of people
+   - Dietary preferences
+2. Click "Browse Trip" to generate your itinerary
+3. If you're logged in, your itinerary will be saved to your account
+4. If you're not logged in, you can still use the public endpoint
+
+**Logout:**
+- Click the "Logout" button in the header to sign out
+
+4) Project Structure
+
+**Backend:**
+- `backend/run.py`: Main entry point for the Flask application
+- `backend/app/__init__.py`: Flask app factory with MongoDB, JWT, and CORS setup
+- `backend/app/routes.py`: API routes for authentication and itinerary generation
+- `backend/app/models.py`: Database models and indexes
+- `backend/app/services.py`: Business logic for itinerary generation
+- `backend/app.py`: Legacy standalone Flask app (deprecated, use `run.py` instead)
 - `backend/requirements.txt`: Python dependencies
-- `frontend/index.html`: Tailwind-based UI with a trip form
+
+**Frontend:**
+- `frontend/index.html`: Main landing page with trip planning form
+- `frontend/login.html`: Login and registration page
+- `frontend/assets/app.js`: Main application JavaScript (trip planning logic)
+- `frontend/assets/auth.js`: Authentication JavaScript (login, register, token management)
+- `frontend/assets/styles.css`: Custom CSS styles
 
 Notes
 - The API key is read from the environment variable `GOOGLE_PLACES_API_KEY`.
@@ -92,7 +202,10 @@ Budget model
 API design
 - `GET /` → service info
 - `GET /health` → `{ status: ok }`
-- `POST /plan-trip` → body: `{ destination, days, budget, people, travelerType }`
+- `POST /api/auth/signup` → Register new user (body: `{ username, email, password }`)
+- `POST /api/auth/signin` → Login user (body: `{ username, password }`) → returns JWT token
+- `POST /plan-trip` → Public endpoint (no auth required) → body: `{ destination, days, budget, people, travelerType }`
+- `POST /api/itinerary/generate` → Authenticated endpoint (requires JWT token in Authorization header)
   - Response: title, `budget_summary`, `minimum_budget`, `hotel`, `daily_plan[]` (activities + restaurants), `activities_fee_estimated`
 
 Frontend UX
@@ -100,9 +213,12 @@ Frontend UX
 - Result cards: minimum budget banner, budget breakdown, suggested stay, day-wise activities and restaurants, cost hints
 
 Non-functional requirements
-- Runs locally without DB; CORS enabled for static file usage
+- Uses SQLite by default for authentication (no setup required)
+- Optional MongoDB support (automatically used if MONGO_URI is configured)
+- CORS enabled for static file usage
+- JWT-based authentication for protected endpoints
 - Extensible: drop-in CSV/API fetchers; replace mock with real data sources
-- Privacy: no user auth or PII stored (current scope)
+- User authentication and session management (works with both SQLite and MongoDB)
 
 Testing & evaluation
 - Unit: budget allocator, minimum-budget estimator, ML clustering selectors
@@ -162,6 +278,6 @@ TEAM
 - 4NI23CS047 DEEKSHITH KUMAR K — 2023cs_deekshithkumark_a@nie.ac.in
 
 Current status vs. planned
-- Implemented: Flask API, INR budget logic, minimum‑budget estimator, hotel/restaurant budget picks, ML clustering selector for attractions, frontend form/UI.
-- Planned: user login, persistent DB (MySQL/MongoDB), real API integrations (Places/TripAdvisor/Zomato/Booking), preference filters, routing/time windows, knapsack optimizer, shareable itineraries.
+- **Implemented:** Flask API, INR budget logic, minimum‑budget estimator, hotel/restaurant budget picks, ML clustering selector for attractions, frontend form/UI, **user authentication (login/register), JWT token management, SQLite-based authentication (default), optional MongoDB support, protected API endpoints.**
+- **Planned:** Real API integrations (Places/TripAdvisor/Zomato/Booking), enhanced preference filters, routing/time windows, knapsack optimizer, shareable itineraries, user profile management, saved itineraries per user.
 

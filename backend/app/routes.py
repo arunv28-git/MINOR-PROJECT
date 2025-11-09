@@ -1,19 +1,18 @@
 from flask import Blueprint, request, jsonify
-from . import mongo, bcrypt # Import shared extensions
-from pymongo.errors import DuplicateKeyError
+from . import mongo, bcrypt # Import shared extensions (MongoDB optional)
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from bson import ObjectId
 from .services import generate_itinerary_service # Import our service function
+from .db import (
+    init_user_db, create_user, get_user_by_username, 
+    get_user_by_id, check_username_exists, check_email_exists
+)
 
 # --- Authentication Blueprint ---
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
-    """Registers a new user."""
-    if not hasattr(mongo, 'db') or mongo.db is None:
-        return jsonify({"success": False, "message": "Authentication disabled. MongoDB not configured."}), 503
-    
+    """Registers a new user. Uses SQLite by default, MongoDB if available."""
     data = request.get_json()
 
     if not data or not data.get('username') or not data.get('email') or not data.get('password'):
@@ -25,33 +24,51 @@ def signup():
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    try:
-        user_id = mongo.db.users.insert_one({
-            'username': username,
-            'email': email,
-            'password': hashed_password
-        }).inserted_id
-        print(f"User created with ID: {user_id}")
-        return jsonify({"success": True, "message": "User registered successfully!"}), 201
-
-    except DuplicateKeyError as e:
-        error_field = "Unknown field"
-        if 'username' in str(e):
-             error_field = "Username"
-        elif 'email' in str(e):
-             error_field = "Email"
-        return jsonify({"success": False, "message": f"{error_field} is already taken!"}), 400
-
-    except Exception as e:
-        print(f"Error during signup: {e}")
-        return jsonify({"success": False, "message": "An error occurred during registration."}), 500
+    # Try MongoDB first if available, otherwise use SQLite
+    use_mongo = hasattr(mongo, 'db') and mongo.db is not None
+    
+    if use_mongo:
+        try:
+            from pymongo.errors import DuplicateKeyError
+            user_id = mongo.db.users.insert_one({
+                'username': username,
+                'email': email,
+                'password': hashed_password
+            }).inserted_id
+            print(f"User created in MongoDB with ID: {user_id}")
+            return jsonify({"success": True, "message": "User registered successfully!"}), 201
+        except DuplicateKeyError as e:
+            error_field = "Unknown field"
+            if 'username' in str(e):
+                error_field = "Username"
+            elif 'email' in str(e):
+                error_field = "Email"
+            return jsonify({"success": False, "message": f"{error_field} is already taken!"}), 400
+        except Exception as e:
+            print(f"Error during MongoDB signup: {e}")
+            return jsonify({"success": False, "message": "An error occurred during registration."}), 500
+    else:
+        # Use SQLite
+        try:
+            # Check if username or email already exists
+            if check_username_exists(username):
+                return jsonify({"success": False, "message": "Username is already taken!"}), 400
+            if check_email_exists(email):
+                return jsonify({"success": False, "message": "Email is already taken!"}), 400
+            
+            user_id = create_user(username, email, hashed_password)
+            if user_id:
+                print(f"User created in SQLite with ID: {user_id}")
+                return jsonify({"success": True, "message": "User registered successfully!"}), 201
+            else:
+                return jsonify({"success": False, "message": "Registration failed. Username or email may already exist."}), 400
+        except Exception as e:
+            print(f"Error during SQLite signup: {e}")
+            return jsonify({"success": False, "message": "An error occurred during registration."}), 500
 
 @auth_bp.route('/signin', methods=['POST'])
 def signin():
-    """Authenticates a user and returns a JWT."""
-    if not hasattr(mongo, 'db') or mongo.db is None:
-        return jsonify({"success": False, "message": "Authentication disabled. MongoDB not configured."}), 503
-    
+    """Authenticates a user and returns a JWT. Uses SQLite by default, MongoDB if available."""
     data = request.get_json()
 
     if not data or not data.get('username') or not data.get('password'):
@@ -60,14 +77,27 @@ def signin():
     username = data['username']
     password = data['password']
 
-    user = mongo.db.users.find_one({'username': username})
-
-    if user and bcrypt.check_password_hash(user['password'], password):
-        user_id_str = str(user['_id'])
-        access_token = create_access_token(identity=user_id_str)
-        return jsonify({"success": True, "accessToken": access_token}), 200
+    # Try MongoDB first if available, otherwise use SQLite
+    use_mongo = hasattr(mongo, 'db') and mongo.db is not None
+    
+    if use_mongo:
+        user = mongo.db.users.find_one({'username': username})
+        if user and bcrypt.check_password_hash(user['password'], password):
+            from bson import ObjectId
+            user_id_str = str(user['_id'])
+            access_token = create_access_token(identity=user_id_str)
+            return jsonify({"success": True, "accessToken": access_token}), 200
+        else:
+            return jsonify({"success": False, "message": "Invalid username or password"}), 401
     else:
-        return jsonify({"success": False, "message": "Invalid username or password"}), 401
+        # Use SQLite
+        user = get_user_by_username(username)
+        if user and bcrypt.check_password_hash(user['password'], password):
+            user_id_str = str(user['id'])
+            access_token = create_access_token(identity=user_id_str)
+            return jsonify({"success": True, "accessToken": access_token}), 200
+        else:
+            return jsonify({"success": False, "message": "Invalid username or password"}), 401
 
 # --- Itinerary Blueprint ---
 itinerary_bp = Blueprint('itinerary', __name__)
@@ -75,14 +105,20 @@ itinerary_bp = Blueprint('itinerary', __name__)
 @itinerary_bp.route('/generate', methods=['POST'])
 @jwt_required() # Protect this route
 def generate_plan():
-    """Generates a travel itinerary, requires JWT authentication."""
-    if not hasattr(mongo, 'db') or mongo.db is None:
-        return jsonify({"success": False, "message": "Authentication disabled. MongoDB not configured."}), 503
-    
+    """Generates a travel itinerary, requires JWT authentication. Uses SQLite by default, MongoDB if available."""
     # Get user ID from the JWT token
     current_user_id = get_jwt_identity()
-    user = mongo.db.users.find_one({'_id': ObjectId(current_user_id)})
-
+    
+    # Try MongoDB first if available, otherwise use SQLite
+    use_mongo = hasattr(mongo, 'db') and mongo.db is not None
+    
+    if use_mongo:
+        from bson import ObjectId
+        user = mongo.db.users.find_one({'_id': ObjectId(current_user_id)})
+    else:
+        # Use SQLite
+        user = get_user_by_id(int(current_user_id))
+    
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 404
 

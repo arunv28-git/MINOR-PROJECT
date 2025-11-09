@@ -6,8 +6,18 @@ import requests
 import time # Import time for potential retries or delays if needed
 
 # --- API Keys Configuration ---
+# Load from environment variables, with fallback to a default key that was working before
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "AIzaSyDDXHMBEVEj6zIXZ8azNX4xncuyzrhOyCI")
-GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY") or GOOGLE_MAPS_API_KEY
+GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY") or os.getenv("GOOGLE_MAPS_API_KEY") or "AIzaSyDDXHMBEVEj6zIXZ8azNX4xncuyzrhOyCI"
+
+# Debug: Print API key status (masked for security)
+if GOOGLE_PLACES_API_KEY:
+    masked_key = GOOGLE_PLACES_API_KEY[:10] + "..." + GOOGLE_PLACES_API_KEY[-4:] if len(GOOGLE_PLACES_API_KEY) > 14 else "***"
+    key_source = "environment variable" if os.getenv("GOOGLE_PLACES_API_KEY") or os.getenv("GOOGLE_MAPS_API_KEY") else "default fallback"
+    print(f"[API Info] Google Places API Key loaded from {key_source}: {masked_key}")
+else:
+    print("[API Warning] No Google Places API Key found!")
+    print("[API Warning] Set GOOGLE_PLACES_API_KEY or GOOGLE_MAPS_API_KEY in .env file")
 
 # --- API Base URLs ---
 GOOGLE_PLACES_BASE = "https://maps.googleapis.com/maps/api/place"

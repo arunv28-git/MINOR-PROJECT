@@ -39,16 +39,30 @@ def get_catalog_for_destination(destination: str) -> dict | None:
     if not destination:
         return None
     catalog = _load_catalog_once()
+    
+    # Normalize destination (strip whitespace, handle common variations)
+    dest_normalized = destination.strip()
+    
     # Simple matching: try exact, then title-cased, then upper/lower
-    if destination in catalog:
-        return catalog[destination]
-    title = destination.title()
+    if dest_normalized in catalog:
+        return catalog[dest_normalized]
+    
+    title = dest_normalized.title()
     if title in catalog:
         return catalog[title]
-    upper = destination.upper()
+    
+    upper = dest_normalized.upper()
     for key in catalog.keys():
         if key.upper() == upper:
             return catalog[key]
+    
+    # Try partial matching (e.g., "Goa" matches "Goa", "Goa State", etc.)
+    dest_lower = dest_normalized.lower()
+    for key in catalog.keys():
+        key_lower = key.lower()
+        if dest_lower in key_lower or key_lower in dest_lower:
+            return catalog[key]
+    
     return None
 
 def get_catalog_center(destination: str):

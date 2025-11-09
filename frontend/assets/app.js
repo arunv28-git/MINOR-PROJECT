@@ -75,9 +75,24 @@ tripForm.addEventListener('submit', async function(event) {
 
     try {
         console.log('🚀 Sending request to backend...');
-        const response = await fetch('http://127.0.0.1:5000/plan-trip', {
+        
+        // Check if user is authenticated
+        const token = localStorage.getItem('tripster_token');
+        const headers = { 'Content-Type': 'application/json' };
+        
+        // Use authenticated endpoint if token exists, otherwise use public endpoint
+        let endpoint = 'http://127.0.0.1:5000/plan-trip';
+        if (token) {
+            endpoint = 'http://127.0.0.1:5000/api/itinerary/generate';
+            headers['Authorization'] = `Bearer ${token}`;
+            console.log('🔐 Using authenticated endpoint');
+        } else {
+            console.log('🌐 Using public endpoint');
+        }
+        
+        const response = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify(tripDetails),
         });
         
@@ -92,6 +107,17 @@ tripForm.addEventListener('submit', async function(event) {
             } catch (e) {
                 err = {};
                 console.error('❌ Could not parse error response');
+            }
+            
+            // Handle authentication errors
+            if (response.status === 401) {
+                // Token expired or invalid, clear it and redirect to login
+                localStorage.removeItem('tripster_token');
+                localStorage.removeItem('tripster_username');
+                alert('Your session has expired. Please log in again.');
+                window.location.href = 'login.html';
+                setLoadingState(false);
+                return;
             }
             
             if (response.status === 422 && err && err.error === 'budget_too_low') {
