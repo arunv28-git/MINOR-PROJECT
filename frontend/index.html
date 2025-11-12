@@ -51,7 +51,7 @@
                     </div>
                     <div class="hidden md:block h-10 w-px bg-gray-300/60"></div>
                     <div class="flex-1 flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">🏷️</div>
+                        <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">🏷</div>
                         <div class="text-left">
                             <p class="text-xs text-gray-500 -mb-1">Where</p>
                             <input type="text" id="destination" name="destination" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Search destinations">
@@ -83,7 +83,7 @@
                     </div>
                     <div class="hidden md:block h-10 w-px bg-gray-300/60"></div>
                     <div class="flex-1 flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">🍽️</div>
+                        <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">🍽</div>
                         <div class="text-left">
                             <p class="text-xs text-gray-500 -mb-1">Diet</p>
                             <select name="vegOnly" id="vegOnly" class="w-full bg-transparent text-gray-900 focus:outline-none">
@@ -197,7 +197,7 @@
                     </div>
                     <div class="flex items-center gap-2 bg-slate-800 rounded-lg p-2 text-gray-300">
                         <input placeholder="Enter Your Email" class="bg-transparent focus:outline-none flex-1"/>
-                        <span>✈️</span>
+                        <span>✈</span>
                     </div>
                 </div>
                 <div>
@@ -247,37 +247,77 @@
         </div>
     </footer>
 
-    <script src="assets/auth.js"></script>
+   <script src="assets/auth.js"></script>
     <script src="assets/app.js"></script>
     <script>
-        // Update navigation based on auth status
-        document.addEventListener('DOMContentLoaded', () => {
+        /**
+         * Function to update the header UI elements (Login, Logout, Greeting) 
+         * based on the presence of the authentication token in localStorage.
+         */
+        function updateAuthUI() {
             const token = localStorage.getItem('tripster_token');
             const username = localStorage.getItem('tripster_username');
             const loginButtonNav = document.getElementById('loginButtonNav');
             const logoutButtonNav = document.getElementById('logoutButtonNav');
             const userGreeting = document.getElementById('userGreeting');
 
-            if (token && window.authUtils) {
-                // User is logged in
-                if (loginButtonNav) loginButtonNav.classList.add('hidden');
+            if (token) {
+                // --- USER IS LOGGED IN ---
+                
+                // 1. HIDE Login Button: Must remove 'md:block' and ensure 'hidden' is present.
+                if (loginButtonNav) {
+                    loginButtonNav.classList.add('hidden');
+                    loginButtonNav.classList.remove('md:block'); 
+                }
+                
+                // 2. SHOW Logout Button: Ensure 'hidden' is removed and 'md:block' is present.
                 if (logoutButtonNav) {
                     logoutButtonNav.classList.remove('hidden');
-                    logoutButtonNav.addEventListener('click', () => {
-                        window.authUtils.logout();
-                    });
+                    logoutButtonNav.classList.add('md:block');
+                    
+                    // Add logout event listener once
+                    if (!logoutButtonNav.hasAttribute('data-listener')) {
+                        logoutButtonNav.addEventListener('click', () => {
+                            if (window.authUtils) window.authUtils.logout(); 
+                        });
+                        logoutButtonNav.setAttribute('data-listener', 'true');
+                    }
                 }
+                
+                // 3. SHOW Greeting
                 if (userGreeting && username) {
                     userGreeting.textContent = `Hello, ${username}!`;
                     userGreeting.classList.remove('hidden');
+                    userGreeting.classList.add('md:block');
                 }
             } else {
-                // User is not logged in
-                if (loginButtonNav) loginButtonNav.classList.remove('hidden');
-                if (logoutButtonNav) logoutButtonNav.classList.add('hidden');
-                if (userGreeting) userGreeting.classList.add('hidden');
+                // --- USER IS NOT LOGGED IN ---
+                
+                // 1. SHOW Login Button: Ensure 'hidden' is removed and 'md:block' is present.
+                if (loginButtonNav) {
+                    loginButtonNav.classList.remove('hidden');
+                    loginButtonNav.classList.add('md:block');
+                }
+                
+                // 2. HIDE Logout Button: Must add 'hidden' and remove 'md:block'.
+                if (logoutButtonNav) {
+                    logoutButtonNav.classList.add('hidden');
+                    logoutButtonNav.classList.remove('md:block');
+                }
+                
+                // 3. HIDE Greeting
+                if (userGreeting) {
+                    userGreeting.classList.add('hidden');
+                    userGreeting.classList.remove('md:block');
+                }
             }
-        });
+        }
+        
+        // Ensure the logic runs immediately on script load
+        updateAuthUI(); 
+
+        // Rerun on DOMContentLoaded as a fallback check
+        document.addEventListener('DOMContentLoaded', updateAuthUI);
     </script>
 </body>
 </html>
