@@ -21,6 +21,34 @@ SAMPLE_ATTRACTIONS: List[Dict] = [
 ]
 
 
+PLACEHOLDER_ACTIVITY_POOL: List[Dict] = [
+    {
+        "name": "Morning heritage walk & photo stops",
+        "duration_hours": 1.5,
+        "est_fee": 0.0,
+        "category": "sightseeing",
+    },
+    {
+        "name": "Local market stroll for souvenirs",
+        "duration_hours": 1.0,
+        "est_fee": 0.0,
+        "category": "shopping",
+    },
+    {
+        "name": "Sunset viewpoint and café break",
+        "duration_hours": 1.5,
+        "est_fee": 200.0,
+        "category": "relaxation",
+    },
+    {
+        "name": "Evening promenade & street food tasting",
+        "duration_hours": 1.5,
+        "est_fee": 150.0,
+        "category": "food",
+    },
+]
+
+
 def cluster_attractions_by_location(num_days: int, attractions: List[Dict] | None = None) -> List[List[Dict]]:
     # Handle empty or None attractions
     if attractions is None or (isinstance(attractions, list) and len(attractions) == 0):
@@ -86,6 +114,7 @@ def select_daily_attractions(
 
     all_days: List[List[Dict]] = []
     total_fees = 0.0
+    placeholder_cursor = 0
     
     for day_cluster in clusters:
         items = day_cluster
@@ -93,7 +122,15 @@ def select_daily_attractions(
         n = len(items)
         
         if n == 0 or B <= 0:
-            all_days.append([])
+            day_picks = []
+            # Fill day with placeholders to meet minimum count
+            while len(day_picks) < 3:
+                placeholder = PLACEHOLDER_ACTIVITY_POOL[placeholder_cursor % len(PLACEHOLDER_ACTIVITY_POOL)].copy()
+                placeholder_cursor += 1
+                day_picks.append(placeholder)
+            day_picks = day_picks[:4]
+            all_days.append(day_picks)
+            total_fees += sum(float(a.get("est_fee", 0) or 0) for a in day_picks)
             continue
             
         # value and weight arrays
@@ -147,6 +184,41 @@ def select_daily_attractions(
                     day_picks.append(a)
                     fee_sum += fee
                     hours_sum += dur
+
+        # Top up selections to guarantee at least three attractions per day.
+        chosen_set = set(chosen_idx)
+        remaining_candidates = [
+            items[i] for i in range(n) if i not in chosen_set and items[i] not in day_picks
+        ]
+        remaining_candidates.sort(key=lambda x: (x.get("est_fee", 0), x.get("duration_hours", 1.0)))
+
+        for candidate in remaining_candidates:
+            if len(day_picks) >= 4:
+                break
+            fee = float(candidate.get("est_fee", 0) or 0)
+            dur = float(candidate.get("duration_hours", 1.0) or 1.0)
+
+            if len(day_picks) < 3:
+                day_picks.append(candidate)
+                fee_sum += fee
+                hours_sum += dur
+            else:
+                if hours_sum + dur <= max_hours_per_day * 1.15 and fee_sum + fee <= per_day_budget * 1.25:
+                    day_picks.append(candidate)
+                    fee_sum += fee
+                    hours_sum += dur
+
+        # Fill with placeholders if we still have fewer than three activities.
+        while len(day_picks) < 3:
+            placeholder = PLACEHOLDER_ACTIVITY_POOL[placeholder_cursor % len(PLACEHOLDER_ACTIVITY_POOL)].copy()
+            placeholder_cursor += 1
+            day_picks.append(placeholder)
+
+        # Cap the day at four activities and recalculate aggregates for consistency.
+        if len(day_picks) > 4:
+            day_picks = day_picks[:4]
+        fee_sum = sum(float(a.get("est_fee", 0) or 0) for a in day_picks)
+        hours_sum = sum(float(a.get("duration_hours", 1.0) or 1.0) for a in day_picks)
                     
         all_days.append(day_picks)
         total_fees += fee_sum

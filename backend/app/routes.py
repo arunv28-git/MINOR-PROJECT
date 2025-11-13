@@ -151,7 +151,9 @@ def generate_plan():
     result = generate_itinerary_service(normalized_request, user['username'])
 
     if "error" in result:
-        return jsonify({"success": False, "message": result["error"]}), 500
+        # Return 422 for budget_too_low errors, 500 for other errors
+        status_code = 422 if result.get("error") == "budget_too_low" else 500
+        return jsonify(result), status_code
     else:
         return jsonify({"success": True, **result}), 200
 

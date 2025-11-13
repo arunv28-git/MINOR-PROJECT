@@ -54,7 +54,8 @@ def create_app():
     if not hasattr(jwt, '_app'):
         jwt.init_app(app)
     
-    cors.init_app(app, origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5500", "http://127.0.0.1:5500", "http://localhost:3000", "http://127.0.0.1:3000"])
+    # CORS configuration - allow all origins for development (restrict in production)
+    cors.init_app(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
     # --- JWT Error Handlers ---
     @jwt.expired_token_loader
