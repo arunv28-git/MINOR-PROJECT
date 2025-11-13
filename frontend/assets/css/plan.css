@@ -1,0 +1,33 @@
+/* ==========================================================================
+   Plan view styling
+   ========================================================================== */
+
+.page-plan main {
+    position: relative;
+}
+
+.page-plan main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top, rgba(76, 29, 149, 0.18), transparent 65%);
+    z-index: -1;
+}
+
+.page-plan #plan-container > div {
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.page-plan #custom-place-form input,
+.page-plan #custom-place-form select {
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page-plan #custom-place-form input:focus,
+.page-plan #custom-place-form select:focus {
+    border-color: rgba(124, 58, 237, 0.45);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+}
+

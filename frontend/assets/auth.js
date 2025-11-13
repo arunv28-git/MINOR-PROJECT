@@ -29,6 +29,31 @@ if (loginTab && registerTab) {
     });
 }
 
+// Password visibility toggles
+(function initPasswordToggles() {
+    const toggleButtons = document.querySelectorAll('[data-toggle-password]');
+    toggleButtons.forEach((button) => {
+        const targetId = button.getAttribute('data-toggle-password');
+        const targetInput = document.getElementById(targetId);
+        if (!targetInput) return;
+
+        const showLabel = button.getAttribute('data-label-show') || 'Show';
+        const hideLabel = button.getAttribute('data-label-hide') || 'Hide';
+
+        // Ensure initial label matches the input state
+        button.textContent = targetInput.type === 'password' ? showLabel : hideLabel;
+        button.setAttribute('aria-label', targetInput.type === 'password' ? 'Show password' : 'Hide password');
+
+        button.addEventListener('click', () => {
+            const showPassword = targetInput.type === 'password';
+            targetInput.type = showPassword ? 'text' : 'password';
+            button.textContent = showPassword ? hideLabel : showLabel;
+            button.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+            button.setAttribute('aria-pressed', String(showPassword));
+        });
+    });
+})();
+
 function clearMessages() {
     const loginError = document.getElementById('loginError');
     const registerError = document.getElementById('registerError');

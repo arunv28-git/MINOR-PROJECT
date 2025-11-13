@@ -1,0 +1,140 @@
+/* ==========================================================================
+   Tripster – shared styles
+   These are the light-touch global rules that sit on top of Tailwind.
+   Keep them small and purposeful so individual pages can layer on their own flair.
+   ========================================================================== */
+
+:root {
+    --brand-purple: #7c3aed;
+    --ink: #0f172a;
+    --card-bg: #0b1324;
+    color-scheme: dark;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--ink);
+    color: #e2e8f0;
+    min-height: 100vh;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.hero-section {
+    position: relative;
+    background-image:
+        linear-gradient(rgba(10, 14, 25, 0.55), rgba(10, 14, 25, 0.85)),
+        url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-purple);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #6d28d9;
+    transform: translateY(-1px);
+}
+
+.btn-primary:focus-visible {
+    outline: 3px solid rgba(124, 58, 237, 0.45);
+    outline-offset: 2px;
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out both;
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.65s ease-out both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Feature cards used across multiple pages */
+.thing-card {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    height: 160px;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+    isolation: isolate;
+}
+
+.thing-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8, 15, 30, 0) 20%, rgba(8, 15, 30, 0.85) 94%);
+    z-index: 0;
+}
+
+.thing-card span,
+.thing-card small {
+    position: absolute;
+    left: 16px;
+    z-index: 1;
+    color: #f8fafc;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.thing-card span {
+    bottom: 44px;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.thing-card small {
+    bottom: 18px;
+    opacity: 0.92;
+    font-size: 0.75rem;
+}
+
+.trip-card,
+.testimonial-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: 0 18px 38px rgba(79, 70, 229, 0.18);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.trip-card:hover,
+.testimonial-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 46px rgba(79, 70, 229, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+

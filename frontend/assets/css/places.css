@@ -1,0 +1,22 @@
+/* ==========================================================================
+   Places page tweaks
+   ========================================================================== */
+
+.page-places .hero-section {
+    min-height: 42vh;
+}
+
+.page-places main section + section {
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    padding-top: 2.5rem;
+}
+
+.page-places .bg-slate-800 {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.page-places .bg-slate-800:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);
+}
+

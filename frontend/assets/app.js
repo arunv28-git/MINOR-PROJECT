@@ -51,15 +51,79 @@ const iconMap = {
 tripForm.addEventListener('submit', async function(event) {
     event.preventDefault();
     console.log('📋 Form submitted');
+
+    const currentLocationInput = document.getElementById('currentLocation');
+    if (currentLocationInput) {
+        const trimmedValue = currentLocationInput.value.trim();
+        if (!trimmedValue) {
+            currentLocationInput.setCustomValidity('Please enter your current location.');
+        } else {
+            currentLocationInput.value = trimmedValue;
+            currentLocationInput.setCustomValidity('');
+        }
+    }
+
+    if (!tripForm.reportValidity()) {
+        if (currentLocationInput) {
+            const clearValidity = () => {
+                currentLocationInput.setCustomValidity('');
+                currentLocationInput.removeEventListener('input', clearValidity);
+            };
+            currentLocationInput.addEventListener('input', clearValidity);
+        }
+        return;
+    }
+
+    if (currentLocationInput) {
+        currentLocationInput.setCustomValidity('');
+    }
+    
+    // Quick health check before submitting
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        const healthCheck = await fetch('http://127.0.0.1:5000/health', { 
+            method: 'GET',
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!healthCheck.ok) {
+            throw new Error('Backend server is not responding correctly');
+        }
+    } catch (healthError) {
+        console.error('❌ Health check failed:', healthError);
+        outputDiv.innerHTML = `
+            <div class="text-center p-8 bg-slate-800 rounded-2xl shadow-xl">
+                <h2 class="text-2xl font-bold text-red-500">Backend Server Not Running</h2>
+                <p class="text-gray-400 mt-2">The backend server is not accessible at http://127.0.0.1:5000</p>
+                <div class="mt-4 p-4 bg-red-900/20 rounded-lg border border-red-800">
+                    <p class="text-sm text-red-300 font-semibold mb-2">Please start the backend server:</p>
+                    <ol class="text-sm text-red-200 list-decimal list-inside space-y-1 text-left max-w-md mx-auto">
+                        <li>Open a terminal/command prompt</li>
+                        <li>Navigate to the backend folder: <code class="bg-slate-700 px-2 py-1 rounded">cd backend</code></li>
+                        <li>Run: <code class="bg-slate-700 px-2 py-1 rounded">python run.py</code></li>
+                        <li>Wait until you see "Running on http://127.0.0.1:5000"</li>
+                        <li>Then refresh this page and try again</li>
+                    </ol>
+                    <p class="text-xs text-red-300 mt-3">Or test the server: <a href="http://127.0.0.1:5000/health" target="_blank" class="text-blue-400 underline">http://127.0.0.1:5000/health</a></p>
+                </div>
+            </div>
+        `;
+        return; // Don't proceed with the form submission
+    }
+    
     setLoadingState(true);
 
     const formData = new FormData(tripForm);
+    const currentLocationValue = formData.get('currentLocation');
     
     const peopleCount = parseInt(formData.get('people'), 10) || 1;
 
     const tripDetails = {
         destination: formData.get('destination'),
-        currentLocation: formData.get('currentLocation') || null,
+        currentLocation: currentLocationValue ? String(currentLocationValue).trim() : null,
         days: parseInt(formData.get('days'), 10),
         budget: parseFloat(formData.get('budget')),
         people: peopleCount,
@@ -121,7 +185,12 @@ tripForm.addEventListener('submit', async function(event) {
             }
             
             if (response.status === 422 && err && err.error === 'budget_too_low') {
-                alert(err.message || 'Entered budget is below the minimum estimate.');
+                // Show a clear popup alert about budget requirement
+                const minBudget = err.minimum_budget?.total_min || 0;
+                const formattedMinBudget = minBudget > 0 ? `₹${Math.round(minBudget).toLocaleString('en-IN')}` : 'the minimum required amount';
+                const message = err.message || `The budget you entered is less than the minimum required budget of ${formattedMinBudget} for ${tripDetails.days} day${tripDetails.days > 1 ? 's' : ''} and ${tripDetails.people} person${tripDetails.people > 1 ? 's' : ''}.`;
+                const fullMessage = `⚠️ Budget Too Low!\n\n${message}\n\nPlease enter a budget that is more than ${formattedMinBudget} to build your itinerary.`;
+                alert(fullMessage);
                 setLoadingState(false);
                 return;
             }
@@ -164,11 +233,37 @@ tripForm.addEventListener('submit', async function(event) {
         console.error('Full error:', error);
         
         let errorMsg = error.message || 'Unknown error occurred';
+        let detailedHelp = '';
+        
         if (error.message && error.message.includes('Failed to fetch')) {
-            errorMsg = 'Could not connect to the backend server. Please ensure it is running on http://127.0.0.1:5000';
+            errorMsg = 'Could not connect to the backend server.';
+            detailedHelp = `
+                <div class="mt-4 p-4 bg-red-900/20 rounded-lg border border-red-800">
+                    <p class="text-sm text-red-300 font-semibold mb-2">Troubleshooting Steps:</p>
+                    <ol class="text-sm text-red-200 list-decimal list-inside space-y-1">
+                        <li>Make sure the backend server is running</li>
+                        <li>Open a terminal and run: <code class="bg-slate-700 px-2 py-1 rounded">cd backend && python run.py</code></li>
+                        <li>Check that you see "Running on http://127.0.0.1:5000" in the terminal</li>
+                        <li>Try opening <a href="http://127.0.0.1:5000/health" target="_blank" class="text-blue-400 underline">http://127.0.0.1:5000/health</a> in your browser</li>
+                        <li>If the health check works, refresh this page and try again</li>
+                    </ol>
+                </div>
+            `;
+        } else if (error.message && error.message.includes('NetworkError')) {
+            errorMsg = 'Network error occurred. Please check your internet connection.';
+        } else if (error.message && error.message.includes('CORS')) {
+            errorMsg = 'CORS error: The server is blocking the request.';
+            detailedHelp = '<p class="text-sm text-yellow-300 mt-2">Make sure the backend CORS is configured correctly.</p>';
         }
         
-        outputDiv.innerHTML = `<div class="text-center p-8 bg-slate-800 rounded-2xl shadow-xl"><h2 class="text-2xl font-bold text-red-500">Failed to Generate Plan</h2><p class="text-gray-400 mt-2">Error: ${errorMsg}</p><p class="text-gray-500 mt-1 text-sm">Please check the browser console (F12) for more details.</p></div>`;
+        outputDiv.innerHTML = `
+            <div class="text-center p-8 bg-slate-800 rounded-2xl shadow-xl">
+                <h2 class="text-2xl font-bold text-red-500">Failed to Generate Plan</h2>
+                <p class="text-gray-400 mt-2">Error: ${errorMsg}</p>
+                ${detailedHelp}
+                <p class="text-gray-500 mt-4 text-sm">Please check the browser console (F12) for more details.</p>
+            </div>
+        `;
         setLoadingState(false);
     }
 });

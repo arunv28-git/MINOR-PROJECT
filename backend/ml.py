@@ -50,21 +50,19 @@ PLACEHOLDER_ACTIVITY_POOL: List[Dict] = [
 
 
 def cluster_attractions_by_location(num_days: int, attractions: List[Dict] | None = None) -> List[List[Dict]]:
-    # Handle empty or None attractions
+    
     if attractions is None or (isinstance(attractions, list) and len(attractions) == 0):
-        # Return empty clusters - caller should handle this
+        
         return [[] for _ in range(num_days)]
     
     data = attractions
     
-    # Ensure k is valid
+    
     k = min(num_days, len(data))
     
     if k <= 1 or not SKLEARN_AVAILABLE:
-        # simple chunking fallback - distribute evenly across days
         if not data:
             return [[] for _ in range(num_days)]
-        # If only 1 day or 1 attraction, put all in first day
         if k == 1:
             result = [data] + [[] for _ in range(num_days - 1)]
             return result[:num_days]
@@ -78,7 +76,6 @@ def cluster_attractions_by_location(num_days: int, attractions: List[Dict] | Non
     for a, label in zip(data, labels):
         clusters[label].append(a)
     
-    # Ensure non-empty per day by merging empties if necessary
     non_empty = [c for c in clusters if c]
     return non_empty if non_empty else [data]
 
@@ -91,23 +88,21 @@ def select_daily_attractions(
 ) -> Tuple[List[List[Dict]], float]:
     """0/1 knapsack by fee (cost) with a time guard; falls back to greedy if needed."""
     
-    # Flatten all clusters to get all attractions
     all_attractions = []
     for cluster in clusters:
         all_attractions.extend(cluster)
     
-    # If we have fewer clusters than days, redistribute all attractions evenly across all days
-    # This ensures every day gets some activities
+    
     if len(clusters) < num_days:
-        # Redistribute evenly across num_days using round-robin
+       
         clusters = [[] for _ in range(num_days)]
         for i, attraction in enumerate(all_attractions):
             clusters[i % num_days].append(attraction)
     else:
-        # Ensure we have exactly num_days clusters (pad with empty lists if needed)
+        
         while len(clusters) < num_days:
             clusters.append([])
-        # Trim to exactly num_days if we somehow have more
+       
         clusters = clusters[:num_days]
     
     per_day_budget = activities_budget_total / num_days
@@ -123,7 +118,7 @@ def select_daily_attractions(
         
         if n == 0 or B <= 0:
             day_picks = []
-            # Fill day with placeholders to meet minimum count
+            
             while len(day_picks) < 3:
                 placeholder = PLACEHOLDER_ACTIVITY_POOL[placeholder_cursor % len(PLACEHOLDER_ACTIVITY_POOL)].copy()
                 placeholder_cursor += 1
@@ -133,7 +128,7 @@ def select_daily_attractions(
             total_fees += sum(float(a.get("est_fee", 0) or 0) for a in day_picks)
             continue
             
-        # value and weight arrays
+        
         values = [1.0 / max(0.5, float(it.get("duration_hours", 1.0))) for it in items]
         costs = [int(max(0, float(it.get("est_fee", 0)))) for it in items]
         durations = [float(it.get("duration_hours", 1.0)) for it in items]
@@ -150,7 +145,7 @@ def select_daily_attractions(
                     dp[i][b] = dp[i - 1][b - w] + v
                     keep[i][b] = True
 
-        # backtrack to get selected indices
+        
         b = B
         chosen_idx = []
         for i in range(n, 0, -1):

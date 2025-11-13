@@ -1,0 +1,21 @@
+/* ==========================================================================
+   Auth views
+   ========================================================================== */
+
+.page-auth {
+    background: radial-gradient(circle at top, rgba(76, 29, 149, 0.22), transparent 55%);
+}
+
+.page-auth .shadow-2xl {
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.55);
+}
+
+.page-auth button[type="button"] {
+    border-radius: 12px;
+}
+
+.page-auth [data-toggle-password] {
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+}
+

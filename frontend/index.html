@@ -9,9 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/home.css">
 </head>
-<body class="text-gray-200">
+<body class="text-gray-200 page-home">
 
     <header class="absolute top-0 left-0 right-0 z-10 p-4">
         <div class="container mx-auto flex justify-between items-center">
@@ -21,8 +22,8 @@
             </div>
             <nav class="hidden md:flex space-x-8 text-white">
                 <a href="index.html#home" class="hover:text-purple-300">Home</a>
-                <a href="about.html" class="hover:text-purple-300">About Us</a>
                 <a href="places.html" class="hover:text-purple-300">Places</a>
+                <a href="about.html" class="hover:text-purple-300">About Us</a>
                 <a href="services.html" class="hover:text-purple-300">Services</a>
             </nav>
             <div class="flex items-center space-x-4">
@@ -46,7 +47,7 @@
                         <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">📍</div>
                         <div class="text-left">
                             <p class="text-xs text-gray-500 -mb-1">From</p>
-                            <input type="text" id="currentLocation" name="currentLocation" class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Current location">
+                            <input type="text" id="currentLocation" name="currentLocation" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Current location">
                         </div>
                     </div>
                     <div class="hidden md:block h-10 w-px bg-gray-300/60"></div>
@@ -105,10 +106,7 @@
     </section>
 
     <main class="container mx-auto px-4 py-16">
-        <section id="about" class="scroll-mt-24 mb-16">
-            <h3 class="text-3xl font-bold text-center mb-4">About Us</h3>
-            <p class="text-center text-gray-400 max-w-3xl mx-auto">Tripster is a smart trip planner that helps you design budget-aware itineraries. We combine travel data, simple ML heuristics, and clean UI to generate day-wise plans including stays and meals. No bookings, just clear guidance tailored to your budget.</p>
-        </section>
+        
 
         <section id="places" class="scroll-mt-24 mb-16">
             <h3 class="text-3xl font-bold text-center mb-2">Places</h3>

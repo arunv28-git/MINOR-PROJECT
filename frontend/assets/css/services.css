@@ -1,0 +1,23 @@
+/* ==========================================================================
+   Services page tweaks
+   ========================================================================== */
+
+.page-services .hero-section {
+    min-height: 42vh;
+    background-image:
+        linear-gradient(rgba(76, 29, 149, 0.45), rgba(15, 23, 42, 0.88)),
+        url('https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2070&auto=format&fit=crop');
+}
+
+.page-services .bg-slate-800 {
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.page-services section a {
+    transition: transform 0.2s ease;
+}
+
+.page-services section a:hover {
+    transform: translateY(-2px);
+}
+
