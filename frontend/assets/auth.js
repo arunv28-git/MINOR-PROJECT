@@ -115,6 +115,40 @@ if (loginButton) {
     });
 }
 
+// Email validation function
+function isValidEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+}
+
+// Real-time email validation
+const registerEmailInput = document.getElementById('registerEmail');
+if (registerEmailInput) {
+    registerEmailInput.addEventListener('blur', () => {
+        const email = registerEmailInput.value.trim();
+        const errorDiv = document.getElementById('registerError');
+        
+        if (email && !isValidEmail(email)) {
+            registerEmailInput.classList.add('border-red-500');
+            registerEmailInput.classList.remove('border-slate-600');
+        } else {
+            registerEmailInput.classList.remove('border-red-500');
+            registerEmailInput.classList.add('border-slate-600');
+        }
+    });
+
+    registerEmailInput.addEventListener('input', () => {
+        // Remove error styling when user starts typing
+        if (registerEmailInput.classList.contains('border-red-500')) {
+            const email = registerEmailInput.value.trim();
+            if (isValidEmail(email) || !email) {
+                registerEmailInput.classList.remove('border-red-500');
+                registerEmailInput.classList.add('border-slate-600');
+            }
+        }
+    });
+}
+
 // Register functionality
 const registerButton = document.getElementById('registerButton');
 if (registerButton) {
@@ -134,6 +168,15 @@ if (registerButton) {
         if (!username || !email || !password || !passwordConfirm) {
             errorDiv.textContent = 'Please fill in all fields';
             errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        // Email format validation
+        if (!isValidEmail(email)) {
+            errorDiv.textContent = 'Please enter a valid email address (e.g., user@example.com)';
+            errorDiv.classList.remove('hidden');
+            registerEmailInput.classList.add('border-red-500');
+            registerEmailInput.classList.remove('border-slate-600');
             return;
         }
 
@@ -167,11 +210,15 @@ if (registerButton) {
                 successDiv.textContent = data.message || 'Registration successful! You can now login.';
                 successDiv.classList.remove('hidden');
                 
-                // Clear form
+                // Clear form and reset styling
                 document.getElementById('registerUsername').value = '';
                 document.getElementById('registerEmail').value = '';
                 document.getElementById('registerPassword').value = '';
                 document.getElementById('registerPasswordConfirm').value = '';
+                if (registerEmailInput) {
+                    registerEmailInput.classList.remove('border-red-500');
+                    registerEmailInput.classList.add('border-slate-600');
+                }
 
                 // Switch to login tab after 2 seconds
                 setTimeout(() => {
