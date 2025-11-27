@@ -1,0 +1,144 @@
+{
+  "Goa, India": {
+    "center": { "lat": 15.2993, "lng": 74.124 },
+    "attractions": [
+      "Calangute Beach",
+      "Basilica of Bom Jesus",
+      "Dudhsagar Falls",
+      "Chapora Fort",
+      "Anjuna Flea Market",
+      "Fort Aguada"
+    ],
+    "stays": [
+      { "name": "Seashell Bay Resort", "budgetTier": "medium" },
+      { "name": "Calangute Beachside Hotel", "budgetTier": "low" },
+      { "name": "Candolim Escape Villas", "budgetTier": "high" }
+    ],
+    "restaurants": [
+      { "name": "Vinayak Family Restaurant" },
+      { "name": "Gunpowder Goa" },
+      { "name": "Thalassa" },
+      { "name": "Anand Bar & Restaurant" },
+      { "name": "Cafe Sussegado Souza" }
+    ]
+  },
+  "Delhi, India": {
+    "center": { "lat": 28.6139, "lng": 77.209 },
+    "attractions": [
+      "India Gate",
+      "Qutub Minar",
+      "Humayun's Tomb",
+      "Lotus Temple",
+      "Red Fort",
+      "Chanakyapuri Diplomatic Enclave",
+      "Lodhi Gardens"
+    ],
+    "stays": [
+      { "name": "Connaught Royale", "budgetTier": "medium" },
+      { "name": "The Imperial New Delhi", "budgetTier": "high" },
+      { "name": "Bloomrooms @ New Delhi Railway Station", "budgetTier": "low" }
+    ],
+    "restaurants": [
+      { "name": "Karim's Jama Masjid" },
+      { "name": "Indian Accent" },
+      { "name": "Saravana Bhavan Connaught Place (Veg)" },
+      { "name": "Sita Ram Diwan Chand" },
+      { "name": "Farzi Cafe" }
+    ]
+  },
+  "Mumbai, India": {
+    "center": { "lat": 19.076, "lng": 72.8777 },
+    "attractions": [
+      "Gateway of India",
+      "Marine Drive",
+      "Chhatrapati Shivaji Maharaj Terminus",
+      "Elephanta Caves",
+      "Colaba Causeway",
+      "Sanjay Gandhi National Park",
+      "Bandra-Worli Sea Link"
+    ],
+    "stays": [
+      { "name": "Hotel Suba Palace", "budgetTier": "medium" },
+      { "name": "The Oberoi Mumbai", "budgetTier": "high" },
+      { "name": "Traveller's Inn Fort", "budgetTier": "low" }
+    ],
+    "restaurants": [
+      { "name": "Leopold Cafe" },
+      { "name": "Bademiya" },
+      { "name": "The Table" },
+      { "name": "Shree Thaker Bhojanalay (Veg)" },
+      { "name": "Britannia & Co." }
+    ]
+  },
+  "Varkala, Kerala": {
+    "center": { "lat": 8.7379, "lng": 76.716 },
+    "attractions": [
+      "Varkala Cliff",
+      "Varkala Beach",
+      "Janardhana Swamy Temple",
+      "Kappil Lake",
+      "Sivagiri Mutt",
+      "Black Sand Beach"
+    ],
+    "stays": [
+      { "name": "Clafouti Beach Resort", "budgetTier": "medium" },
+      { "name": "Gateway Beach Homestay", "budgetTier": "low" },
+      { "name": "The Gateway Hotel Varkala", "budgetTier": "high" }
+    ],
+    "restaurants": [
+      { "name": "Cafe Del Mar" },
+      { "name": "Abba Restaurant" },
+      { "name": "God's Own Country Kitchen" },
+      { "name": "Darjeeling Cafe" },
+      { "name": "Trattorias" }
+    ]
+  },
+  "Gokarna, India": {
+    "center": { "lat": 14.5479, "lng": 74.3185 },
+    "attractions": [
+      "Om Beach",
+      "Kudle Beach",
+      "Half Moon Beach",
+      "Gokarna Main Beach",
+      "Mahabaleshwar Temple",
+      "Mirjan Fort",
+      "Paradise Beach"
+    ],
+    "stays": [
+      { "name": "Namaste Sanjeevini", "budgetTier": "medium" },
+      { "name": "Zostel Gokarna", "budgetTier": "low" },
+      { "name": "SwaSwara Wellness Retreat", "budgetTier": "high" }
+    ],
+    "restaurants": [
+      { "name": "Namaste Cafe" },
+      { "name": "Mantra Cafe" },
+      { "name": "Chez Christophe" },
+      { "name": "Halfway Home Restaurant" },
+      { "name": "Prema Restaurant" }
+    ]
+  },
+  "Meghalaya, India": {
+    "center": { "lat": 25.467, "lng": 91.3662 },
+    "attractions": [
+      "Living Root Bridges (Nongriat)",
+      "Nohkalikai Falls",
+      "Dawki River",
+      "Mawsmai Cave",
+      "Shillong Peak",
+      "Ward's Lake",
+      "Elephant Falls"
+    ],
+    "stays": [
+      { "name": "Cafe Shillong Bed & Breakfast", "budgetTier": "medium" },
+      { "name": "The Heritage Club Shillong", "budgetTier": "high" },
+      { "name": "Zostel Shillong", "budgetTier": "low" }
+    ],
+    "restaurants": [
+      { "name": "Trattoria Shillong" },
+      { "name": "Cafe Shillong Heritage" },
+      { "name": "Dylan's Cafe" },
+      { "name": "City Hut Family Dhaba" },
+      { "name": "Jadoh (Traditional Khasi, Veg Options)" }
+    ]
+  }
+}

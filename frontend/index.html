@@ -14,22 +14,38 @@
 </head>
 <body class="text-gray-200 page-home">
 
-    <header class="absolute top-0 left-0 right-0 z-10 p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-purple-400"><path d="M12.48 4.78a2.25 2.25 0 0 0-2.96 0L2.92 11.4a2.25 2.25 0 0 0 .15 3.32l8.15 5.43a2.25 2.25 0 0 0 2.8 0l8.15-5.43a2.25 2.25 0 0 0 .15-3.32l-6.6-6.62Z"/><path d="m18 16 4-3-4-3"/><path d="m6 16-4-3 4-3"/></svg>
-                <h1 class="text-2xl font-bold text-white">Tripster</h1>
+    <header class="absolute top-0 left-0 right-0 z-10">
+        <div class="nav-promo-bar text-white">
+            <div class="nav-promo-track">
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>Home</span>
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>Places</span>
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>About&nbsp;Us</span>
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>Services</span>
             </div>
-            <nav class="hidden md:flex space-x-8 text-white">
-                <a href="index.html#home" class="hover:text-purple-300">Home</a>
-                <a href="places.html" class="hover:text-purple-300">Places</a>
-                <a href="about.html" class="hover:text-purple-300">About Us</a>
-                <a href="services.html" class="hover:text-purple-300">Services</a>
-            </nav>
-            <div class="flex items-center space-x-4">
-                <span id="userGreeting" class="hidden md:block text-white text-sm"></span>
-                <a id="loginButtonNav" href="login.html" class="hidden md:block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Login</a>
-                <button id="logoutButtonNav" class="hidden md:block bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Logout</button>
+            <div class="nav-promo-track" aria-hidden="true">
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>Home</span>
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>Places</span>
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>About&nbsp;Us</span>
+                <span class="nav-promo-item"><span class="nav-promo-dot"></span>Services</span>
+            </div>
+        </div>
+        <div class="p-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-purple-400"><path d="M12.48 4.78a2.25 2.25 0 0 0-2.96 0L2.92 11.4a2.25 2.25 0 0 0 .15 3.32l8.15 5.43a2.25 2.25 0 0 0 2.8 0l8.15-5.43a2.25 2.25 0 0 0 .15-3.32l-6.6-6.62Z"/><path d="m18 16 4-3-4-3"/><path d="m6 16-4-3 4-3"/></svg>
+                    <h1 class="text-2xl font-bold text-white">TRIPSTER</h1>
+                </div>
+                <nav class="hidden md:flex space-x-8 text-white">
+                    <a href="index.html#home" class="hover:text-purple-300">HOME</a>
+                    <a href="places.html" class="hover:text-purple-300">PLACES</a>
+                    <a href="about.html" class="hover:text-purple-300">ABOUT US</a>
+                    <a href="services.html" class="hover:text-purple-300">SERVICES</a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <span id="userGreeting" class="hidden md:block text-white text-sm"></span>
+                    <a id="loginButtonNav" href="login.html" class="hidden md:block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Login</a>
+                    <button id="logoutButtonNav" class="hidden md:block bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Logout</button>
+                </div>
             </div>
         </div>
     </header>
@@ -38,7 +54,7 @@
         <div class="container mx-auto px-4 fade-in">
             <p class="text-sm text-gray-300/90 mb-4">✨ Travel Your Dream Destination <a href="#places" class="underline hover:text-purple-300">Learn More</a></p>
             <h2 class="text-4xl md:text-6xl font-extrabold leading-tight">
-                Life Is Adventure Make<br class="hidden md:block"/> The Best Of It
+                PLAN AND GET GOING<br class="hidden md:block"/> 
             </h2>
 
             <form id="tripForm" class="mt-8 max-w-5xl mx-auto">
@@ -47,22 +63,22 @@
                         <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">📍</div>
                         <div class="text-left">
                             <p class="text-xs text-gray-500 -mb-1">From</p>
-                            <input type="text" id="currentLocation" name="currentLocation" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Current location">
+                            <input type="text" id="currentLocation" name="currentLocation" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Location">
                         </div>
                     </div>
                     <div class="hidden md:block h-10 w-px bg-gray-300/60"></div>
                     <div class="flex-1 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">🏷</div>
                         <div class="text-left">
-                            <p class="text-xs text-gray-500 -mb-1">Where</p>
-                            <input type="text" id="destination" name="destination" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Search destinations">
+                            <p class="text-xs text-gray-500 -mb-1">WHERE</p>
+                            <input type="text" id="destination" name="destination" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Destination">
                         </div>
                     </div>
                     <div class="hidden md:block h-10 w-px bg-gray-300/60"></div>
                     <div class="flex-1 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">📅</div>
                         <div class="text-left">
-                            <p class="text-xs text-gray-500 -mb-1">When</p>
+                            <p class="text-xs text-gray-500 -mb-1">DAYS</p>
                             <input type="number" id="days" name="days" min="1" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Days">
                         </div>
                     </div>
@@ -70,15 +86,15 @@
                     <div class="flex-1 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">💰</div>
                         <div class="text-left">
-                            <p class="text-xs text-gray-500 -mb-1">Budget</p>
-                            <input type="number" id="budget" name="budget" min="1000" step="500" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Budget (INR)">
+                            <p class="text-xs text-gray-500 -mb-1">BUDGET</p>
+                            <input type="number" id="budget" name="budget" min="1000" step="500" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Budget">
                         </div>
                     </div>
                     <div class="hidden md:block h-10 w-px bg-gray-300/60"></div>
                     <div class="flex-1 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">👥</div>
                         <div class="text-left">
-                            <p class="text-xs text-gray-500 -mb-1">People</p>
+                            <p class="text-xs text-gray-500 -mb-1">PEOPLE</p>
                             <input type="number" id="people" name="people" min="1" value="1" required class="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none" placeholder="Number of people">
                         </div>
                     </div>
@@ -86,20 +102,20 @@
                     <div class="flex-1 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">🍽</div>
                         <div class="text-left">
-                            <p class="text-xs text-gray-500 -mb-1">Diet</p>
+                            <p class="text-xs text-gray-500 -mb-1">DIET</p>
                             <select name="vegOnly" id="vegOnly" class="w-full bg-transparent text-gray-900 focus:outline-none">
-                                <option value="false">All cuisines</option>
+                                <option value="false">All </option>
                                 <option value="true">Veg only</option>
                             </select>
                         </div>
                     </div>
                     <button type="submit" id="submit-button" class="ml-auto md:ml-0 shrink-0 w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center transition-colors">
                         <svg id="button-spinner" class="hidden animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <span id="button-text" class="sr-only">Browse Trip</span>
+                        <span id="button-text" class="sr-only">PLAN TRIP</span>
                     </button>
                 </div>
                 <div class="mt-5">
-                    <button type="submit" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl">Browse Trip</button>
+                    <button type="submit" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl">PLAN TRIP</button>
                 </div>
             </form>
         </div>

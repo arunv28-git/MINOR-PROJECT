@@ -1,8 +1,4 @@
-/* ==========================================================================
-   Tripster – shared styles
-   These are the light-touch global rules that sit on top of Tailwind.
-   Keep them small and purposeful so individual pages can layer on their own flair.
-   ========================================================================== */
+
 
 :root {
     --brand-purple: #7c3aed;

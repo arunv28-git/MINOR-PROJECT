@@ -1,6 +1,56 @@
-/* ==========================================================================
-   Home page accents
-   ========================================================================== */
+
+
+.nav-promo-bar {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.8));
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.nav-promo-track {
+    display: flex;
+    gap: 2.75rem;
+    padding: 0.65rem 1.5rem;
+    min-width: 100%;
+    flex-shrink: 0;
+    animation: promo-marquee 18s linear infinite;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+}
+
+.nav-promo-track:nth-child(2) {
+    animation-delay: -9s;
+}
+
+.nav-promo-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.nav-promo-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--brand-purple);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.6);
+}
+
+@keyframes promo-marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-promo-track {
+        animation: none;
+    }
+}
 
 .page-home header {
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0));
